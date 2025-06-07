@@ -13,6 +13,7 @@ struct Record { //In order to read a file
     int id, year, zip;
     std::string name;
     std::set<int> friends;
+    int privacy;
 };
 
 Network::Network() {} //Default constructor
@@ -41,7 +42,7 @@ int Network::addConnection(std::string s1, std::string s2) {
         }
         if(s2 == user->getName()) { //Get user 2
             user2 = user;
-        } 
+        }
     }
     if(user1 != nullptr && user2 != nullptr) { // Make sure they exist
         user1->addFriend(user2->getId());
@@ -72,7 +73,7 @@ int Network::deleteConnection(std::string s1, std::string s2) {
         }
         if(s2 == user->getName()) {
             user2 = user;
-        } 
+        }
     }
     if(user1 != nullptr && user2 != nullptr) { // As long as the two users exist and have a connection, the connection will be deleted
         user1->deleteFriend(user2->getId());
@@ -105,7 +106,7 @@ int Network::readUsers(char* fname) {
     std::string line;
     std::getline(file, line);
 
-    while (std::getline(file, line)) {  
+    while (std::getline(file, line)) {
         Record record;
 
         // Line 1: ID
@@ -114,7 +115,7 @@ int Network::readUsers(char* fname) {
         // Line 2: Name
         std::getline(file, record.name);
         auto start = std::find_if(record.name.begin(), record.name.end(),
-                          [](unsigned char ch) { return !std::isspace(ch); });
+                                  [](unsigned char ch) { return !std::isspace(ch); });
 
         record.name = std::string(start, record.name.end());
 
@@ -134,7 +135,10 @@ int Network::readUsers(char* fname) {
             record.friends.insert(value);
         }
 
-        User* user = new User(record.id, record.name, record.year, record.zip, record.friends); //Initialize user
+        std::getline(file, line);
+        record.privacy = stoi(line);
+
+        User* user = new User(record.id, record.name, record.year, record.zip, record.friends, record.privacy); //Initialize user
         users_.push_back(user); //Add to the users_ vector
         records.push_back(record);
     }
@@ -159,6 +163,8 @@ int Network::writeUsers(char* fname) {
             file << i << " ";
         }
         file << "\n";
+
+        file << "\t" << user->getPrivacy() << "\n";
     }
 
     return 0;
@@ -192,7 +198,7 @@ std::vector<int> Network::shortestPath(int from, int to) {
     visited[from] = true;
     q.push(from);
 
-    while(q.size() > 0) { 
+    while(q.size() > 0) {
         int current = q.front();
         q.pop(); //Iterate through queue looking at friends of different users
         for(auto neighbor : getUser(current)->getFriends()) {
@@ -220,7 +226,7 @@ std::vector<int> Network::shortestPath(int from, int to) {
 }
 
 //pre: Ids from, to, and distance
-//post: finds users the select number of distance away from the user. 
+//post: finds users the select number of distance away from the user.
 std::vector<int> Network::distanceUser(int from, int& to, int distance) {
     std::queue<int> q; //This method is the same as above apart from the level variable
     std::vector<bool> visited (numUsers(), 0);
@@ -330,7 +336,7 @@ std::vector<std::vector<int> > Network::groups() {
 
 //pre: owner ID, message, likes, isIncoming, author's name, and the publicity.
 //post: adds a post to the user in the network.
-void Network::addPost(int ownerId, std::string message, int likes, bool isIncoming, std::string authorName, bool isPublic) {
+void Network::addPost(int ownerId, std::string message, int likes, bool isIncoming, std::string authorName, int privacy) {
     int count = 0;
     for(User* user: users_) {
         count += user->getPosts().size(); //Get amount of posts in database to assign next ID
@@ -340,19 +346,66 @@ void Network::addPost(int ownerId, std::string message, int likes, bool isIncomi
         Post* post = new Post(count, ownerId, message, likes);
         getUser(ownerId)->addPost(post);
     } else {
-        IncomingPost* post = new IncomingPost(count, ownerId, message, likes, isPublic, authorName);
+        IncomingPost* post = new IncomingPost(count, ownerId, message, likes, privacy, authorName);
         getUser(ownerId)->addPost(post);
     }
 }
 
-//pre: owner ID, howMany posts, publicity
-//post: returns a string of the most recent posts of the user depending on publicity
-std::string Network::getPostsString(int ownerId, int howMany, bool showOnlyPublic) {
-    User* user = getUser(ownerId);
-    if(user == nullptr) {
-        return ""; //Make sure user exists
+//pre: owner ID, howMany posts, and viewer
+//post: returns a string of the most recent posts of the user depending on relationship to user
+std::string Network::getPostsString(int ownerId, int howMany, User* viewer) {
+    std::string result;
+    int count = 0; //Will track how many posts we grabbed
+    User* owner = getUser(ownerId);
+    if(owner == nullptr) {
+        return "The owner is not a user";
     }
-    return user->getPostsString(howMany, showOnlyPublic); //Call user function
+    bool isFriend = false;
+    bool isfoff = false;
+
+    for(int x: owner->getFriends()) {
+        if(viewer->getId() == x) {
+            isFriend = true;
+        }
+    }
+
+    for(int x: owner->getFriends()) {
+        User* f = getUser(x);
+        for(int y: f->getFriends()) {
+            if(viewer->getId() == y) {
+                isfoff = true;
+            }
+        }
+    }
+
+    if(owner->getPosts().empty()) { //If empty
+        return "";
+    }
+
+    for (int i = owner->getPosts().size() - 1; i >= 0 && count < howMany; i--) {
+        Post* post = owner->getPosts()[i];
+        int postPrivacy = post->getPrivacy();
+
+        bool canSee = false;
+
+        if (postPrivacy == 2) {
+            canSee = true; // Public
+        } else if (postPrivacy == 1 && (isfoff || isFriend)) {
+            canSee = true; // Friends of friends
+        } else if (postPrivacy == 0 && isFriend) {
+            canSee = true; // Friends only
+        }
+
+        if (canSee) {
+            if (!result.empty()) {
+                result += "\n\n";
+            }
+            result += post->toString();
+            count++;
+        }
+    }
+
+    return result;
 }
 
 //pre: file name
@@ -368,8 +421,8 @@ int Network::readPosts(char* fname) {
     file.ignore(); //Go to next line
 
     for(int i = 0; i < numPosts; i++) {
-        int messageId, ownerId, likes;
-        std::string message, line, visibility, author;
+        int messageId, ownerId, likes, privacy = 2;
+        std::string message, line, author;
 
         file >> messageId; //Get each line from file in order
         file.ignore();
@@ -383,22 +436,21 @@ int Network::readPosts(char* fname) {
         std::getline(file, line);
         likes = stoi(line.substr(1));
 
-        std::getline(file, visibility);
-        if(!visibility.empty()) {
-            visibility = visibility.substr(1);
+        std::getline(file, line);
+        if (!line.empty()) {
+            privacy = std::stoi(line.substr(1));
         }
 
         std::getline(file, author);
-        if(!author.empty()) {
+        if (!author.empty()) {
             author = author.substr(1);
         }
 
-        if(visibility.empty() && author.empty()) { //Ordinary post
-            Post* post = new Post(messageId, ownerId, message, likes);
+        if (author.empty()) {
+            Post* post = new Post(messageId, ownerId, message, likes, privacy);
             getUser(ownerId)->addPost(post);
-        } else { //Incoming Post
-            bool isPublic = (visibility == "public");
-            IncomingPost* post = new IncomingPost(messageId, ownerId, message, likes, isPublic, author);
+        } else {
+            IncomingPost* post = new IncomingPost(messageId, ownerId, message, likes, privacy, author);
             getUser(ownerId)->addPost(post);
         }
     }
@@ -432,13 +484,13 @@ int Network::writePosts(char* fname) {
         file << "\t" << post->getOwnerId() << std::endl;
         file << "\t" << post->getLikes() << std::endl;
 
-        std::string visibility = post->getIsPublic() ? "public" : "private";
+        int visibility = post->getPrivacy();
         std::string author = post->getAuthor();
+        file << "\t" << visibility << std::endl;
 
         if(author.empty()) {
-            file << "\t\n\t\n";
+            file << "\t\n";
         } else {
-            file << "\t" << visibility << std::endl;
             file << "\t" << author << std::endl;
         }
     }

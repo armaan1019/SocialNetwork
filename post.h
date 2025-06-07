@@ -7,20 +7,21 @@ class Post {
     int ownerId_;
     std::string message_;
     int likes_;
+    int privacy_ = 2;
 
-    public:
+public:
     Post(); //Default constructor
 
     //pre: message ID, owner ID, message, likes
-//post: initializes a new post
-    Post(int messageId, int ownerId, std::string message, int likes);
+    //post: initializes a new post
+    Post(int messageId, int ownerId, std::string message, int likes, int privacy = 2);
 
     //pre: none
     //post: prints all of the info
     virtual std::string toString();
 
     //pre: none
-//post: returns message ID
+    //post: returns message ID
     int getMessageId();
 
     //pre: none
@@ -28,44 +29,40 @@ class Post {
     int getOwnerId();
 
     //pre: none
-//post: get Message
+    //post: get Message
     std::string getMessage();
 
     //pre: none
-//post: get likes
+    //post: get likes
     int getLikes();
 
     //pre: none
-//post: get author name
+    //post: get author name
     virtual std::string getAuthor();
 
     //pre: none
-//post: get publicity
-    virtual bool getIsPublic();
+    //post: gets privacy
+    int getPrivacy();
 };
 
 class IncomingPost: public Post {
     std::string author_;
-    bool isPublic_;
+    int privacy_ = 2;
 
-    public:
+public:
     IncomingPost(); //Default constructor
 
     //pre: same as post plus isPublic and author
-//post: initialized Incoming Post object
-    IncomingPost(int messageId, int ownerId, std::string message, int likes, bool isPublic, std::string author);
+    //post: initialized Incoming Post object
+    IncomingPost(int messageId, int ownerId, std::string message, int likes, int privacy, std::string author);
 
     //pre: none
     //post: returns a string of info
     std::string toString();
 
     //pre: none
-//post: gets author name
+    //post: gets author name
     std::string getAuthor();
-
-    //pre: none
-//post: gets publicity
-    bool getIsPublic();
 };
 
 #endif

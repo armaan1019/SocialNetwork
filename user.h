@@ -12,14 +12,15 @@ class User{
     int zip_;
     std::set<int> friends_;
     std::vector<Post*> messages_;
+    int privacy_ = 2;
 
     //pre: none
     //post: default constructor
-    public: User();
+public: User();
 
     //pre: id, name, birth year, zip code, and friends of user (constructor)
     //post: will initialize a new user
-    User(int id_, std::string name_, int year_, int zip_, const std::set<int>& friends_);
+    User(int id, std::string name, int year, int zip, const std::set<int>& friends, int privacy = 2);
 
     //pre: id of the user
     //post: Add new friend for the user
@@ -38,12 +39,20 @@ class User{
     std::string getName();
 
     //pre: none
-//post: return user birth year
+    //post: return user birth year
     int getYear();
 
     //pre: none
-//post: return user zip code
+    //post: return user zip code
     int getZip();
+
+    //pre: none
+    //post: get privacy
+    int getPrivacy();
+
+    //pre: an int
+    //post: sets Privacy
+    void setPrivacy(int p);
 
     //pre: none
     //post: returns a reference of set of ints of the user's friends
@@ -54,7 +63,7 @@ class User{
     void addPost(Post*);
 
     //pre: none
-//post: gets a vector of all posts from users
+    //post: gets a vector of all posts from users
     std::vector<Post*> getPosts();
 
     //pre: howMany, and publicity

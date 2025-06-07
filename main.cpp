@@ -9,11 +9,11 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     //QString pathUser = QCoreApplication::applicationDirPath() + "/../../../users.txt";
-    //QString pathPost = QCoreApplication::applicationDirPath() + "/../../../posts.txt";
+    //QString pathPost = QCoreApplication::applicationDirPath() + "/../../../posts2.txt";
     Network network;
-    network.readUsers("users.txt");
-    network.readPosts("posts.txt");
-    //qDebug() << QDir::currentPath();
+    network.readUsers("users2.txt");
+    network.readPosts("posts2.txt");
+    qDebug() << QDir::currentPath();
     MainWindow w(&network);
     w.show();
     return a.exec();

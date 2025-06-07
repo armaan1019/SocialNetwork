@@ -11,6 +11,7 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QComboBox>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QMainWindow>
@@ -39,6 +40,15 @@ public:
     QPushButton *addFriendButton;
     QTextEdit *enterPost;
     QPushButton *addPost;
+    QLabel *notFriendLabel;
+    QPushButton *settingsButton;
+    QComboBox *profilePrivacy;
+    QComboBox *postsPrivacy;
+    QComboBox *commentPrivacy;
+    QLabel *profilePrivacyLabel;
+    QLabel *postsPrivacyLabel;
+    QLabel *commentPrivacyLabel;
+    QPushButton *settingsSaveButton;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -72,7 +82,7 @@ public:
         backButton->setGeometry(QRect(510, 10, 111, 32));
         suggestTable = new QTableWidget(centralwidget);
         suggestTable->setObjectName("suggestTable");
-        suggestTable->setGeometry(QRect(20, 270, 256, 192));
+        suggestTable->setGeometry(QRect(20, 320, 256, 192));
         addPostButton = new QPushButton(centralwidget);
         addPostButton->setObjectName("addPostButton");
         addPostButton->setGeometry(QRect(390, 10, 101, 32));
@@ -85,6 +95,42 @@ public:
         addPost = new QPushButton(centralwidget);
         addPost->setObjectName("addPost");
         addPost->setGeometry(QRect(520, 500, 101, 32));
+        notFriendLabel = new QLabel(centralwidget);
+        notFriendLabel->setObjectName("notFriendLabel");
+        notFriendLabel->setGeometry(QRect(50, 270, 201, 16));
+        settingsButton = new QPushButton(centralwidget);
+        settingsButton->setObjectName("settingsButton");
+        settingsButton->setGeometry(QRect(640, 10, 101, 32));
+        profilePrivacy = new QComboBox(centralwidget);
+        profilePrivacy->addItem(QString());
+        profilePrivacy->addItem(QString());
+        profilePrivacy->addItem(QString());
+        profilePrivacy->setObjectName("profilePrivacy");
+        profilePrivacy->setGeometry(QRect(320, 210, 103, 32));
+        postsPrivacy = new QComboBox(centralwidget);
+        postsPrivacy->addItem(QString());
+        postsPrivacy->addItem(QString());
+        postsPrivacy->addItem(QString());
+        postsPrivacy->setObjectName("postsPrivacy");
+        postsPrivacy->setGeometry(QRect(320, 270, 103, 32));
+        commentPrivacy = new QComboBox(centralwidget);
+        commentPrivacy->addItem(QString());
+        commentPrivacy->addItem(QString());
+        commentPrivacy->addItem(QString());
+        commentPrivacy->setObjectName("commentPrivacy");
+        commentPrivacy->setGeometry(QRect(320, 330, 103, 32));
+        profilePrivacyLabel = new QLabel(centralwidget);
+        profilePrivacyLabel->setObjectName("profilePrivacyLabel");
+        profilePrivacyLabel->setGeometry(QRect(210, 210, 101, 16));
+        postsPrivacyLabel = new QLabel(centralwidget);
+        postsPrivacyLabel->setObjectName("postsPrivacyLabel");
+        postsPrivacyLabel->setGeometry(QRect(210, 270, 111, 16));
+        commentPrivacyLabel = new QLabel(centralwidget);
+        commentPrivacyLabel->setObjectName("commentPrivacyLabel");
+        commentPrivacyLabel->setGeometry(QRect(180, 330, 131, 16));
+        settingsSaveButton = new QPushButton(centralwidget);
+        settingsSaveButton->setObjectName("settingsSaveButton");
+        settingsSaveButton->setGeometry(QRect(320, 420, 101, 32));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
@@ -118,6 +164,24 @@ public:
         addPostButton->setText(QCoreApplication::translate("MainWindow", "Add Post", nullptr));
         addFriendButton->setText(QCoreApplication::translate("MainWindow", "Add Friend", nullptr));
         addPost->setText(QCoreApplication::translate("MainWindow", "Add", nullptr));
+        notFriendLabel->setText(QCoreApplication::translate("MainWindow", "Become a friend to view friends", nullptr));
+        settingsButton->setText(QCoreApplication::translate("MainWindow", "Settings", nullptr));
+        profilePrivacy->setItemText(0, QCoreApplication::translate("MainWindow", "Private", nullptr));
+        profilePrivacy->setItemText(1, QCoreApplication::translate("MainWindow", "Semi-private", nullptr));
+        profilePrivacy->setItemText(2, QCoreApplication::translate("MainWindow", "Public", nullptr));
+
+        postsPrivacy->setItemText(0, QCoreApplication::translate("MainWindow", "Private", nullptr));
+        postsPrivacy->setItemText(1, QCoreApplication::translate("MainWindow", "Semi-private", nullptr));
+        postsPrivacy->setItemText(2, QCoreApplication::translate("MainWindow", "Public", nullptr));
+
+        commentPrivacy->setItemText(0, QCoreApplication::translate("MainWindow", "Private", nullptr));
+        commentPrivacy->setItemText(1, QCoreApplication::translate("MainWindow", "Semi-private", nullptr));
+        commentPrivacy->setItemText(2, QCoreApplication::translate("MainWindow", "Public", nullptr));
+
+        profilePrivacyLabel->setText(QCoreApplication::translate("MainWindow", "Profile Privacy:", nullptr));
+        postsPrivacyLabel->setText(QCoreApplication::translate("MainWindow", "Posts Privacy:", nullptr));
+        commentPrivacyLabel->setText(QCoreApplication::translate("MainWindow", "Comments Privacy:", nullptr));
+        settingsSaveButton->setText(QCoreApplication::translate("MainWindow", "Save", nullptr));
     } // retranslateUi
 
 };

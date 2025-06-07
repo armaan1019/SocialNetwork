@@ -8,12 +8,13 @@ User::User() {} //Default constructor
 
 //pre: id, name, birth year, zip code, and friends of user (constructor)
 //post: will initialize a new user
-User::User(int id, std::string name, int year, int zip, const std::set<int>& friends) {
+User::User(int id, std::string name, int year, int zip, const std::set<int>& friends, int privacy) {
     id_ = id;
     name_ = name;
     year_ = year;
     zip_ = zip;
     friends_ = friends;
+    privacy_ = privacy;
 }
 
 
@@ -47,6 +48,10 @@ std::set<int>& User::getFriends() {
     return friends_;
 }
 
+int User::getPrivacy() {
+    return privacy_;
+}
+
 //pre: id of the user
 //post: Add new friend for the user
 void User::addFriend(int id) {
@@ -58,7 +63,7 @@ void User::addFriend(int id) {
 void User::deleteFriend(int id) {
     for(int x: friends_) {
         //std::cout << x << std::endl;
-        if(id == x) { //If it finds the id, it will delete the person. 
+        if(id == x) { //If it finds the id, it will delete the person.
             friends_.erase(id); // If two people do not have a connection and you attempt to delete, it will simply do nothing
             std::cout << "Deletion Successful" << std::endl;
             break;
@@ -67,7 +72,7 @@ void User::deleteFriend(int id) {
 }
 
 //pre: a post pointer
-    //post: adds the post to the user
+//post: adds the post to the user
 void User::addPost(Post* post) {
     messages_.push_back(post);
 }
@@ -79,7 +84,7 @@ std::vector<Post*> User::getPosts() {
 }
 
 //pre: howMany, and publicity
-    //post: prints the most recent posts fpr the user depending on publicity
+//post: prints the most recent posts for the user depending on publicity
 std::string User::getPostsString(int howMany, bool showOnlyPublic) {
     std::string result;
     int count = 0; //Will track how many posts we grabbed
@@ -91,7 +96,7 @@ std::string User::getPostsString(int howMany, bool showOnlyPublic) {
     for(int i = messages_.size() - 1; i >= 0 && count < howMany; i--) {
         Post* post = messages_[i];
 
-        if(showOnlyPublic && !post->getIsPublic()) {
+        if(showOnlyPublic && post->getPrivacy() != 2) {
             continue;
         }
 
@@ -103,4 +108,8 @@ std::string User::getPostsString(int howMany, bool showOnlyPublic) {
     }
 
     return result;
+}
+
+void User::setPrivacy(int p) {
+    privacy_ = p;
 }

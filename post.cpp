@@ -8,15 +8,16 @@ Post::Post() {
 
 //pre: message ID, owner ID, message, likes
 //post: initializes a new post
-Post::Post(int messageId, int ownerId, std::string message, int likes) {
+Post::Post(int messageId, int ownerId, std::string message, int likes, int privacy) {
     messageId_ = messageId;
     ownerId_ = ownerId;
     message_ = message;
     likes_ = likes;
+    privacy_ = privacy;
 }
 
 //pre: none
-    //post: prints all of the info
+//post: prints all of the info
 std::string Post::toString() {
     return message_ + " Liked by " + std::to_string(likes_) + " people";
 }
@@ -28,7 +29,7 @@ int Post::getMessageId() {
 }
 
 //pre: none
-    //post: returns owner ID
+//post: returns owner ID
 int Post::getOwnerId() {
     return ownerId_;
 }
@@ -51,23 +52,23 @@ std::string Post::getAuthor() {
     return "";
 }
 
-//pre: none
-//post: get publicity
-bool Post::getIsPublic() {
-    return true;
+int Post::getPrivacy() {
+    return privacy_;
 }
 
 IncomingPost::IncomingPost() {} //Default constructor
 
 //pre: same as post plus isPublic and author
 //post: initializes Incoming Post object
-IncomingPost::IncomingPost(int messageId, int ownerId, std::string message, int likes, bool isPublic, std::string author): Post(messageId, ownerId, message, likes), isPublic_(isPublic), author_(author) {}
+IncomingPost::IncomingPost(int messageId, int ownerId, std::string message, int likes, int privacy, std::string author): Post(messageId, ownerId, message, likes, privacy), privacy_(privacy), author_(author) {}
 
 //pre: none
-    //post: returns a string of info
+//post: returns a string of info
 std::string IncomingPost::toString() {
-    if(isPublic_ == true) {
-        return author_ + " wrote: " + Post::toString(); 
+    if(privacy_ == 2) {
+        return author_ + " wrote: " + Post::toString();
+    } else if(privacy_ == 1) {
+        return author_ + " wrote(semi-private): " + Post::toString();
     }
     return author_ + " wrote(private): " + Post::toString();
 }
@@ -76,10 +77,4 @@ std::string IncomingPost::toString() {
 //post: gets author name
 std::string IncomingPost::getAuthor() {
     return author_;
-}
-
-//pre: none
-//post: gets publicity
-bool IncomingPost::getIsPublic() {
-    return isPublic_;
 }

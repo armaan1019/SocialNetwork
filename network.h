@@ -8,7 +8,7 @@
 class Network {
     std::vector<User*> users_;
 
-    public: 
+public:
     Network(); //Default constructor
     //pre: a user object
     //post: add to the users_ vector
@@ -47,7 +47,7 @@ class Network {
     std::vector<int> shortestPath(int from, int to);
 
     //pre: Ids from, to, and distance
-    //post: finds users the select number of distance away from the user. 
+    //post: finds users the select number of distance away from the user.
     std::vector<int> distanceUser(int from, int& to, int distance);
 
     //pre: Id of a user, and a score
@@ -61,11 +61,11 @@ class Network {
 
     //pre: owner ID, message, likes, isIncoming, author's name, and the publicity.
     //post: adds a post to the user in the network.
-    void addPost(int ownerId, std::string message, int likes, bool isIncoming, std::string authorName, bool isPublic);
+    void addPost(int ownerId, std::string message, int likes, bool isIncoming, std::string authorName, int privacy);
 
     //pre: owner ID, howMany posts, publicity
     //post: returns a string of the most recent posts of the user depending on publicity
-    std::string getPostsString(int ownerId, int howMany, bool showOnlyPublic);
+    std::string getPostsString(int ownerId, int howMany, User* viewer);
 
     //pre: file name
     //post: reads post from a file

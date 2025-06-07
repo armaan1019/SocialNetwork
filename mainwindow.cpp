@@ -3,12 +3,34 @@
 #include <vector>
 #include <QDebug>
 #include <QDir>
+#include <QSettings>
 
 MainWindow::MainWindow(Network* network_, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow), network(network_)
 {
     ui->setupUi(this);
+
+    QSettings settings("MyCompany", "SocialNetwork");
+    postPrivacy = settings.value("postPrivacy", 2).toInt();
+    commentPrivacy = settings.value("commentPrivacy", 2).toInt();
+
+    ui->postsPrivacy->setCurrentIndex(postPrivacy);
+    ui->commentPrivacy->setCurrentIndex(commentPrivacy);
+
+    connect(ui->postsPrivacy, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [=](int index) {
+        postPrivacy = index;
+        QSettings settings("MyCompany", "SocialNetwork");
+        settings.setValue("postPrivacy", index);
+    });
+
+    connect(ui->commentPrivacy, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [=](int index) {
+        commentPrivacy = index;
+        QSettings settings("MyCompany", "SocialNetwork");
+        settings.setValue("commentPrivacy", index);
+    });
+
+
     ui->errorLabel->hide();
     ui->profileLabel->hide();
     ui->friendsTable->hide();
@@ -19,6 +41,15 @@ MainWindow::MainWindow(Network* network_, QWidget *parent)
     ui->suggestTable->hide();
     ui->addPost->hide();
     ui->enterPost->hide();
+    ui->notFriendLabel->hide();
+    ui->settingsButton->hide();
+    ui->profilePrivacy->hide();
+    ui->profilePrivacyLabel->hide();
+    ui->commentPrivacy->hide();
+    ui->commentPrivacyLabel->hide();
+    ui->postsPrivacy->hide();
+    ui->postsPrivacyLabel->hide();
+    ui->settingsSaveButton->hide();
 
     connect(ui->loginButton, &QPushButton::clicked, this, &MainWindow::handleLogin);
     connect(ui->friendsTable, &QTableWidget::cellClicked, this, &MainWindow::switchProfile);
@@ -27,6 +58,8 @@ MainWindow::MainWindow(Network* network_, QWidget *parent)
     connect(ui->addFriendButton, &QPushButton::clicked, this, &MainWindow::addFriend);
     connect(ui->addPostButton, &QPushButton::clicked, this, &MainWindow::addPost);
     connect(ui->addPost, &QPushButton::clicked, this, &MainWindow::add);
+    connect(ui->settingsButton, &QPushButton::clicked, this, &MainWindow::settingsButton);
+    connect(ui->settingsSaveButton, &QPushButton::clicked, this, &MainWindow::settingsSave);
 }
 
 MainWindow::~MainWindow()
@@ -85,6 +118,7 @@ void MainWindow::handleLogin() {
         ui->postsLabel->setText(postsText);
         ui->postsLabel->setWordWrap(true);
         ui->postsLabel->show();
+        ui->settingsButton->show();
     } else {
         ui->errorLabel->show();
     }
@@ -100,19 +134,43 @@ void MainWindow::switchProfile(int row, int col) {
     }
 
     display = network->getUser(network->getId(item->text().toStdString()));
+    int privacy = display->getPrivacy();
+    bool isFriend = false;
+    bool isfoff = false;
+    for(int x: display->getFriends()) {
+        if(user->getId() == x) {
+            isFriend = true;
+            break;
+        }
+    }
+    if(!isFriend) {
+        for(int x: display->getFriends()) {
+            User* newUser = network->getUser(x);
+            for(int y: newUser->getFriends()) {
+                if(user->getId() == y) {
+                    isfoff = true;
+                }
+            }
+        }
+    }
     QString profileString = QString::fromStdString(display->getName());
 
     ui->profileLabel->setText(profileString + "'s Profile");
-    ui->friendsTable->setRowCount(display->getFriends().size());
-    int newRow = 0;
-    for(auto buddy: display->getFriends()) {
-        User* userFriend = network->getUser(buddy);
-        QTableWidgetItem *item = new QTableWidgetItem(QString::fromStdString(userFriend->getName()));
-        ui->friendsTable->setItem(newRow, 0, item);
-        newRow++;
+    if(privacy == 2 || isFriend || (privacy == 1 && isfoff)) {
+        ui->friendsTable->setRowCount(display->getFriends().size());
+        int newRow = 0;
+        for(auto buddy: display->getFriends()) {
+            User* userFriend = network->getUser(buddy);
+            QTableWidgetItem *item = new QTableWidgetItem(QString::fromStdString(userFriend->getName()));
+            ui->friendsTable->setItem(newRow, 0, item);
+            newRow++;
+        }
+    } else {
+        ui->notFriendLabel->show();
+        ui->friendsTable->hide();
     }
 
-    QString postsText = QString::fromStdString(display->getPostsString(5, true));
+    QString postsText = QString::fromStdString(network->getPostsString(display->getId(), 5, user));
     ui->postsLabel->setText(postsText);
     ui->postsLabel->setWordWrap(true);
     ui->postsLabel->show();
@@ -120,6 +178,7 @@ void MainWindow::switchProfile(int row, int col) {
 
 void MainWindow::back() {
     //ui->friendsTable->setEnabled(true);
+    ui->notFriendLabel->hide();
     MainWindow::handleLogin();
 }
 
@@ -135,18 +194,42 @@ void MainWindow::addSuggest(int row, int col) {
     display = network->getUser(network->getId(item->text().toStdString()));
     QString profileString = QString::fromStdString(display->getName());
 
-    ui->profileLabel->setText(profileString + "'s Profile");
-    ui->friendsTable->setRowCount(display->getFriends().size());
-    int newRow = 0;
-    for(auto buddy: display->getFriends()) {
-        User* userFriend = network->getUser(buddy);
-        QTableWidgetItem *item = new QTableWidgetItem(QString::fromStdString(userFriend->getName()));
-        ui->friendsTable->setItem(newRow, 0, item);
-        newRow++;
+    int privacy = display->getPrivacy();
+    bool isFriend = false;
+    bool isfoff = false;
+    for(int x: display->getFriends()) {
+        if(user->getId() == x) {
+            isFriend = true;
+            break;
+        }
     }
-    //ui->friendsTable->setEnabled(false);
+    if(!isFriend) {
+        for(int x: display->getFriends()) {
+            User* newUser = network->getUser(x);
+            for(int y: newUser->getFriends()) {
+                if(user->getId() == y) {
+                    isfoff = true;
+                }
+            }
+        }
+    }
+    ui->profileLabel->setText(profileString + "'s Profile");
+    if(privacy == 2 || isFriend || (privacy == 1 && isfoff)) {
+        ui->friendsTable->setRowCount(display->getFriends().size());
+        int newRow = 0;
+        for(auto buddy: display->getFriends()) {
+            User* userFriend = network->getUser(buddy);
+            QTableWidgetItem *item = new QTableWidgetItem(QString::fromStdString(userFriend->getName()));
+            ui->friendsTable->setItem(newRow, 0, item);
+            newRow++;
+        }
+        //ui->friendsTable->setEnabled(false);
+    } else {
+        ui->notFriendLabel->show();
+        ui->friendsTable->hide();
+    }
 
-    QString postsText = QString::fromStdString(display->getPostsString(5, true));
+    QString postsText = QString::fromStdString(network->getPostsString(display->getId(), 5, user));
     ui->postsLabel->setText(postsText);
     ui->postsLabel->setWordWrap(true);
     ui->postsLabel->show();
@@ -173,7 +256,7 @@ void MainWindow::addFriend() {
         ui->friendsTable->setItem(newRow, 0, item);
         newRow++;
     }
-    network->writeUsers("users.txt");
+    network->writeUsers("users2.txt");
 }
 
 void MainWindow::addPost() {
@@ -192,9 +275,9 @@ void MainWindow::add() {
         for(int i = 0; i < network->numUsers(); i++) {
             numPosts += network->getUser(i)->getPosts().size();
         }
-        Post* p = new IncomingPost(numPosts, display->getId(), post.toStdString(), 0, true, user->getName());
+        Post* p = new IncomingPost(numPosts, display->getId(), post.toStdString(), 0, commentPrivacy, user->getName());
         display->addPost(p);
-        network->writePosts("posts.txt");
+        network->writePosts("posts2.txt");
         QString postsText = QString::fromStdString(display->getPostsString(5, false));
         ui->postsLabel->setText(postsText);
         ui->postsLabel->setWordWrap(true);
@@ -204,14 +287,51 @@ void MainWindow::add() {
         for(int i = 0; i < network->numUsers(); i++) {
             numPosts += network->getUser(i)->getPosts().size();
         }
-        Post* p = new Post(numPosts, user->getId(), post.toStdString(), 0);
+        Post* p = new Post(numPosts, user->getId(), post.toStdString(), 0, postPrivacy);
         user->addPost(p);
-        network->writePosts("posts.txt");
+        network->writePosts("posts2.txt");
         QString postsText = QString::fromStdString(user->getPostsString(5, false));
         ui->postsLabel->setText(postsText);
         ui->postsLabel->setWordWrap(true);
     }
 
+    ui->enterPost->clear();
     ui->addPost->hide();
     ui->enterPost->hide();
+}
+
+void MainWindow::settingsButton() {
+    ui->profilePrivacy->setCurrentIndex(user->getPrivacy());
+    ui->postsPrivacy->setCurrentIndex(postPrivacy);
+    ui->commentPrivacy->setCurrentIndex(commentPrivacy);
+    ui->settingsSaveButton->show();
+    ui->friendsTable->hide();
+    ui->suggestTable->hide();
+    ui->postsLabel->hide();
+    ui->addPostButton->hide();
+    ui->profileLabel->setText("Your Settings");
+
+    ui->profilePrivacy->show();
+    ui->profilePrivacyLabel->show();
+    ui->commentPrivacy->show();
+    ui->commentPrivacyLabel->show();
+    ui->postsPrivacy->show();
+    ui->postsPrivacyLabel->show();
+}
+
+void MainWindow::settingsSave() {
+    user->setPrivacy(ui->profilePrivacy->currentIndex());
+    network->writeUsers("users2.txt");
+    postPrivacy = ui->postsPrivacy->currentIndex();
+    commentPrivacy = ui->commentPrivacy->currentIndex();
+
+    ui->settingsSaveButton->hide();
+    ui->profilePrivacy->hide();
+    ui->profilePrivacyLabel->hide();
+    ui->commentPrivacy->hide();
+    ui->commentPrivacyLabel->hide();
+    ui->postsPrivacy->hide();
+    ui->postsPrivacyLabel->hide();
+
+    MainWindow::back();
 }

@@ -27,11 +27,15 @@ private slots:
     void addFriend();
     void addPost();
     void add();
+    void settingsButton();
+    void settingsSave();
 
 private:
     Ui::MainWindow *ui;
     Network* network;
     User* user;
     User* display;
+    int postPrivacy;
+    int commentPrivacy;
 };
 #endif // MAINWINDOW_H
